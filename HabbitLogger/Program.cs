@@ -125,7 +125,7 @@ string getUserInput(string message, string typeOfData)
         {
             if (userInput.Trim().ToLower() == "t")
             {
-                return DateTime.Now.ToString("dd-MM-yyyy");
+                return DateTime.Now.ToString("dd-MMM-yyyy");
             }
 
             if (DateTime.TryParseExact(userInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out temp))
