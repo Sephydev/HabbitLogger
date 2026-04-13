@@ -1,4 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
+using System.Globalization;
+
+string connectionString = @"Data Source=habit-logger.db";
 
 CreateDB();
 RunApp();
@@ -32,8 +35,7 @@ void RunApp ()
                 Console.ReadLine();
                 break;
             case "2":
-                Console.WriteLine("UNDER CONSTRUCTION - Please be patient (Press Enter to continue)");
-                Console.ReadLine();
+                AddHabit();
                 break;
             case "3":
                 Console.WriteLine("UNDER CONSTRUCTION - Please be patient (Press Enter to continue)");
@@ -53,7 +55,7 @@ void RunApp ()
 
 void CreateDB()
 {
-    using var connection = new SqliteConnection(@"Data Source=habit-logger.db");
+    using var connection = new SqliteConnection(connectionString);
     {
         connection.Open();
 
@@ -61,7 +63,7 @@ void CreateDB()
 
         command.CommandText = @"
             CREATE TABLE IF NOT EXISTS habits (
-            ID INTEGER PRIMARY KEY,
+            ID INTEGER PRIMARY KEY AUTOINCREMENT,
             HABIT TEXT,
             DATE TEXT,
             QUANTITY INTEGER,
@@ -72,5 +74,73 @@ void CreateDB()
         command.ExecuteNonQuery();
 
         connection.Close();
+    }
+}
+
+void AddHabit()
+{
+    string userHabit;
+    string date;
+    int quantity;
+    string unit;
+
+    userHabit = getUserInput("Please enter the name of the habit.", "string");
+    date = getUserInput("Please enter the date of the habit. (Format dd-mm-yyyy) (Enter 't' to input the today's date)", "date");
+    quantity = Convert.ToInt32(getUserInput("Please enter the quantity. (No decimals allowed)", "int"));
+    unit = getUserInput("Please enter the unit.", "string");
+
+    using var connection = new SqliteConnection(connectionString);
+    {
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+
+        command.CommandText = $"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')";
+
+        command.ExecuteNonQuery();
+
+        connection.Close();
+    }
+}
+
+string getUserInput(string message, string typeOfData)
+{
+    string? userInput;
+    string userInputText;
+    int userInputNumber;
+    DateTime temp;
+
+    while (true)
+    {
+        Console.Clear();
+        Console.WriteLine(message);
+        userInput = Console.ReadLine();
+
+        if (userInput == null)
+            continue;
+
+        userInputText = userInput.Trim().ToLower();
+
+        if (typeOfData == "date")
+        {
+            if (userInput.Trim().ToLower() == "t")
+            {
+                return DateTime.Now.ToString("dd-MM-yyyy");
+            }
+
+            if (DateTime.TryParseExact(userInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out temp))
+            {
+                return temp.ToString("dd-MMM-yyyy");
+            }
+        }
+
+        if (typeOfData == "int" && int.TryParse(userInput, out userInputNumber) && userInputNumber >= 0)
+            return userInputText;
+
+        if (typeOfData == "string" && userInput != null && userInput.Length > 0)
+            return userInputText;
+
+        Console.WriteLine("Please try again.");
+        Console.ReadLine();
     }
 }
