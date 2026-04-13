@@ -3,7 +3,16 @@ using System.Globalization;
 
 string connectionString = @"Data Source=habit-logger.db";
 
-CreateDB();
+ExecuteSQL(@"
+            CREATE TABLE IF NOT EXISTS habits(
+            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            HABIT TEXT,
+            DATE TEXT,
+            QUANTITY INTEGER,
+            UNIT TEXT
+        )
+        ");
+
 RunApp();
 
 void RunApp ()
@@ -53,30 +62,6 @@ void RunApp ()
     }
 }
 
-void CreateDB()
-{
-    using var connection = new SqliteConnection(connectionString);
-    {
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-
-        command.CommandText = @"
-            CREATE TABLE IF NOT EXISTS habits (
-            ID INTEGER PRIMARY KEY AUTOINCREMENT,
-            HABIT TEXT,
-            DATE TEXT,
-            QUANTITY INTEGER,
-            UNIT TEXT
-        )
-        ";
-
-        command.ExecuteNonQuery();
-
-        connection.Close();
-    }
-}
-
 void AddHabit()
 {
     string userHabit;
@@ -89,18 +74,7 @@ void AddHabit()
     quantity = Convert.ToInt32(getUserInput("Please enter the quantity. (No decimals allowed)", "int"));
     unit = getUserInput("Please enter the unit.", "string");
 
-    using var connection = new SqliteConnection(connectionString);
-    {
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-
-        command.CommandText = $"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')";
-
-        command.ExecuteNonQuery();
-
-        connection.Close();
-    }
+    ExecuteSQL($"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')");
 }
 
 string getUserInput(string message, string typeOfData)
@@ -142,5 +116,21 @@ string getUserInput(string message, string typeOfData)
 
         Console.WriteLine("Please try again.");
         Console.ReadLine();
+    }
+}
+
+void ExecuteSQL(string sqlCommand)
+{
+    using var connection = new SqliteConnection(connectionString);
+    {
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+
+        command.CommandText = sqlCommand;
+
+        command.ExecuteNonQuery();
+
+        connection.Close();
     }
 }
