@@ -40,8 +40,7 @@ void RunApp ()
                 running = false;
                 break;
             case "1":
-                Console.WriteLine("UNDER CONSTRUCTION - Please be patient (Press Enter to continue)");
-                Console.ReadLine();
+                ViewHabit();
                 break;
             case "2":
                 AddHabit();
@@ -60,6 +59,36 @@ void RunApp ()
                 break;
         }
     }
+}
+
+void ViewHabit()
+{
+    using var connection = new SqliteConnection(connectionString);
+    {
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+
+        command.CommandText = @"SELECT * FROM habits";
+
+        using var reader = command.ExecuteReader();
+
+        Console.Clear();
+        while (reader.Read())
+        {
+            int id = reader.GetInt32(0);
+            string habit = reader.GetString(1);
+            string date = reader.GetString(2);
+            int quantity = reader.GetInt32(3);
+            string unit = reader.GetString(4);
+
+            Console.WriteLine($"ID: {id}\t| Habit: {habit}\t| Date: {date}\t| Quantity: {quantity}\t| Unit: {unit}");
+        }
+
+        connection.Close();
+    }
+
+    Console.ReadLine();
 }
 
 void AddHabit()
