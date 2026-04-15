@@ -1,6 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Globalization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 string connectionString = @"Data Source=habit-logger.db";
 
