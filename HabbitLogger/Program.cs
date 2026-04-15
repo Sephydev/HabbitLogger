@@ -106,7 +106,8 @@ void AddHabit()
 
 void deleteHabit()
 {
-    string? userInput;
+    string? idToDelete;
+    int numberOfRowsDeleted;
 
     while (true)
     {
@@ -114,12 +115,35 @@ void deleteHabit()
 
         Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
         Console.WriteLine("Please enter the ID of the habit you want to delete.");
-        userInput = Console.ReadLine();
+        idToDelete = Console.ReadLine();
 
-        if (userInput == null)
+        if (idToDelete == null || !int.TryParse(idToDelete, out _))
+        {
+            Console.WriteLine("Please enter a valid ID");
+            Console.ReadLine();
             continue;
+        }
 
-        ExecuteNonQuerySQL($"DELETE FROM habits WHERE ID = {userInput}");
+        using var connection = new SqliteConnection(connectionString);
+        {
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+
+            command.CommandText = $"DELETE FROM habits WHERE ID = {idToDelete}";
+
+            numberOfRowsDeleted = command.ExecuteNonQuery();
+
+            connection.Close();
+        }
+
+        if (numberOfRowsDeleted == 0)
+        {
+            Console.WriteLine("The ID you entered doesn't exist.");
+            Console.ReadLine();
+            continue;
+        }
+
         break;
     }
 }
