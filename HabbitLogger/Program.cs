@@ -41,13 +41,14 @@ void RunApp ()
                 break;
             case "1":
                 ViewHabit();
+                Console.WriteLine("(Press Enter to continue)");
                 Console.ReadLine();
                 break;
             case "2":
                 AddHabit();
                 break;
             case "3":
-                deleteHabit();
+                DeleteHabit();
                 break;
             case "4":
                 Console.WriteLine("UNDER CONSTRUCTION - Please be patient (Press Enter to continue)");
@@ -102,9 +103,12 @@ void AddHabit()
     unit = getUserHabit("Please enter the unit.", "string");
 
     ExecuteNonQuerySQL($"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')");
+
+    Console.WriteLine($"{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
+    Console.ReadLine();
 }
 
-void deleteHabit()
+void DeleteHabit()
 {
     string? idToDelete;
     int numberOfRowsDeleted;
@@ -119,7 +123,7 @@ void deleteHabit()
 
         if (idToDelete == null || !int.TryParse(idToDelete, out _))
         {
-            Console.WriteLine("Please enter a valid ID");
+            Console.WriteLine("Please enter a valid ID. (Press Enter to continue)");
             Console.ReadLine();
             continue;
         }
@@ -139,11 +143,13 @@ void deleteHabit()
 
         if (numberOfRowsDeleted == 0)
         {
-            Console.WriteLine("The ID you entered doesn't exist.");
+            Console.WriteLine("The ID you entered doesn't exist. (Press Enter to continue)");
             Console.ReadLine();
             continue;
         }
 
+        Console.WriteLine($"The Habit with id {idToDelete} has been successfully deleted! (Press Enter to continue)");
+        Console.ReadLine();
         break;
     }
 }
@@ -185,7 +191,7 @@ string getUserHabit(string message, string typeOfData)
         if (typeOfData == "string" && userInput != null && userInput.Length > 0)
             return userInputText;
 
-        Console.WriteLine("Please try again.");
+        Console.WriteLine("Please enter the correct information. (Press Enter to continue)");
         Console.ReadLine();
     }
 }
