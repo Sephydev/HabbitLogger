@@ -3,7 +3,7 @@ using System.Globalization;
 
 string connectionString = @"Data Source=habit-logger.db";
 
-ExecuteSQL(@"
+ExecuteNonQuerySQL(@"
             CREATE TABLE IF NOT EXISTS habits(
             ID INTEGER PRIMARY KEY AUTOINCREMENT,
             HABIT TEXT,
@@ -103,7 +103,7 @@ void AddHabit()
     quantity = Convert.ToInt32(getUserInput("Please enter the quantity. (No decimals allowed)", "int"));
     unit = getUserInput("Please enter the unit.", "string");
 
-    ExecuteSQL($"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')");
+    ExecuteNonQuerySQL($"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')");
 }
 
 string getUserInput(string message, string typeOfData)
@@ -148,7 +148,7 @@ string getUserInput(string message, string typeOfData)
     }
 }
 
-void ExecuteSQL(string sqlCommand)
+void ExecuteNonQuerySQL(string sqlCommand)
 {
     using var connection = new SqliteConnection(connectionString);
     {
