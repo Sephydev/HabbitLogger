@@ -3,7 +3,15 @@ using System.Globalization;
 
 string connectionString = @"Data Source=habit-logger.db";
 
-ExecuteNonQuerySQL(@"
+try
+{
+    using var connection = new SqliteConnection(connectionString);
+    {
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+
+        command.CommandText = @"
             CREATE TABLE IF NOT EXISTS habits(
             ID INTEGER PRIMARY KEY AUTOINCREMENT,
             HABIT TEXT,
@@ -11,7 +19,19 @@ ExecuteNonQuerySQL(@"
             QUANTITY INTEGER,
             UNIT TEXT
         )
-        ");
+        ";
+
+        command.ExecuteNonQuery();
+
+        connection.Close();
+    }
+}
+catch (SqliteException e)
+{
+    Console.WriteLine($"An Error occured while trying to create the DB. Please try again later.\nError: {e.Message}.\n(Press Enter to exit the app)");
+    Console.ReadLine();
+    Environment.Exit(0);
+}
 
 RunApp();
 
@@ -63,29 +83,37 @@ void RunApp ()
 
 void ViewHabit()
 {
-    using var connection = new SqliteConnection(connectionString);
+    try
     {
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-
-        command.CommandText = @"SELECT * FROM habits";
-
-        using var reader = command.ExecuteReader();
-
-        Console.Clear();
-        while (reader.Read())
+        using var connection = new SqliteConnection(connectionString);
         {
-            int id = reader.GetInt32(0);
-            string habit = reader.GetString(1);
-            string date = reader.GetString(2);
-            int quantity = reader.GetInt32(3);
-            string unit = reader.GetString(4);
+            connection.Open();
 
-            Console.WriteLine($"ID: {id}\t| Habit: {habit}\t| Date: {date}\t| Quantity: {quantity}\t| Unit: {unit}");
+            using var command = connection.CreateCommand();
+
+            command.CommandText = @"SELECT * FROM habits";
+
+            using var reader = command.ExecuteReader();
+
+            Console.Clear();
+            while (reader.Read())
+            {
+                int id = reader.GetInt32(0);
+                string habit = reader.GetString(1);
+                string date = reader.GetString(2);
+                int quantity = reader.GetInt32(3);
+                string unit = reader.GetString(4);
+
+                Console.WriteLine($"ID: {id}\t| Habit: {habit}\t| Date: {date}\t| Quantity: {quantity}\t| Unit: {unit}");
+            }
+
+            connection.Close();
         }
-
-        connection.Close();
+    } 
+    catch (SqliteException e)
+    {
+        Console.WriteLine($"\nAn error occured while trying to view the DB contents. Please try again later.\nError: {e.Message}.\n(Press Enter to return to the main menu)");
+        Console.ReadLine();
     }
 }
 
@@ -101,25 +129,33 @@ void AddHabit()
     quantity = Convert.ToInt32(GetUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
     unit = GetUserHabit("Please enter the unit.", "string");
 
-    using var connection = new SqliteConnection(connectionString);
+    try
     {
-        connection.Open();
+        using var connection = new SqliteConnection(connectionString);
+        {
+            connection.Open();
 
-        using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
 
-        command.CommandText = "INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT) VALUES ($userHabit, $date, $quantity, $unit)";
-        command.Parameters.AddWithValue("$userHabit", userHabit);
-        command.Parameters.AddWithValue("$date", date);
-        command.Parameters.AddWithValue("$quantity", quantity);
-        command.Parameters.AddWithValue("$unit", unit);
+            command.CommandText = "INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT) VALUES ($userHabit, $date, $quantity, $unit)";
+            command.Parameters.AddWithValue("$userHabit", userHabit);
+            command.Parameters.AddWithValue("$date", date);
+            command.Parameters.AddWithValue("$quantity", quantity);
+            command.Parameters.AddWithValue("$unit", unit);
 
-        command.ExecuteNonQuery();
+            command.ExecuteNonQuery();
 
-        connection.Close();
+            connection.Close();
+        }
+
+        Console.WriteLine($"{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
+        Console.ReadLine();
     }
-
-    Console.WriteLine($"{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
-    Console.ReadLine();
+    catch (SqliteException e)
+    {
+        Console.WriteLine($"\nAn error occurred while trying to add the new habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
+        Console.ReadLine();
+    }
 }
 
 void DeleteHabit()
@@ -132,7 +168,7 @@ void DeleteHabit()
         ViewHabit();
 
         Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
-        Console.WriteLine("Please enter the ID of the habit you want to delete.");
+        Console.WriteLine("Please enter the ID of the habits you want to delete.");
         idToDelete = Console.ReadLine();
 
         if (idToDelete == null || !int.TryParse(idToDelete, out _))
@@ -142,18 +178,27 @@ void DeleteHabit()
             continue;
         }
 
-        using var connection = new SqliteConnection(connectionString);
+        try
         {
-            connection.Open();
+            using var connection = new SqliteConnection(connectionString);
+            {
+                connection.Open();
 
-            using var command = connection.CreateCommand();
+                using var command = connection.CreateCommand();
 
-            command.CommandText = "DELETE FROM habits WHERE ID = $idToDelete";
-            command.Parameters.AddWithValue("$idToDelete", idToDelete);
+                command.CommandText = "DELETE FROM habits WHERE ID = $idToDelete";
+                command.Parameters.AddWithValue("$idToDelete", idToDelete);
 
-            numberOfRowsDeleted = command.ExecuteNonQuery();
+                numberOfRowsDeleted = command.ExecuteNonQuery();
 
-            connection.Close();
+                connection.Close();
+            }
+        }
+        catch (SqliteException e)
+        {
+            Console.WriteLine($"\nAn error occurred while trying to delete the habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
+            Console.ReadLine();
+            break;
         }
 
         if (numberOfRowsDeleted == 0)
@@ -198,23 +243,32 @@ void UpdateHabit()
         newQuantity = Convert.ToInt32(GetUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
         newUnit = GetUserHabit("Please enter the unit.", "string");
 
-        using var connection = new SqliteConnection(connectionString);
+        try
         {
-            connection.Open();
+            using var connection = new SqliteConnection(connectionString);
+            {
+                connection.Open();
 
-            using var command = connection.CreateCommand();
+                using var command = connection.CreateCommand();
 
-            command.CommandText = "UPDATE habits SET HABIT = $newUserHabit, DATE = $newDate, QUANTITY = $newQuantity, UNIT = $newUnit WHERE ID = $idToUpdate";
-            command.Parameters.AddWithValue("$newUserHabit", newUserHabit);
-            command.Parameters.AddWithValue("$newDate", newDate);
-            command.Parameters.AddWithValue("$newQuantity", newQuantity);
-            command.Parameters.AddWithValue("$newUnit", newUnit);
-            command.Parameters.AddWithValue("$idToUpdate", idToUpdate);
+                command.CommandText = "UPDATE habits SET HABIT = $newUserHabit, DATE = $newDate, QUANTITY = $newQuantity, UNIT = $newUnit WHERE ID = $idToUpdate";
+                command.Parameters.AddWithValue("$newUserHabit", newUserHabit);
+                command.Parameters.AddWithValue("$newDate", newDate);
+                command.Parameters.AddWithValue("$newQuantity", newQuantity);
+                command.Parameters.AddWithValue("$newUnit", newUnit);
+                command.Parameters.AddWithValue("$idToUpdate", idToUpdate);
 
-            numberOfRowsUpdated = command.ExecuteNonQuery();
+                numberOfRowsUpdated = command.ExecuteNonQuery();
 
-            connection.Close();
-        };
+                connection.Close();
+            }
+        } 
+        catch (SqliteException e)
+        {
+            Console.WriteLine($"\nAn error occurred while trying to update the habit. Please try again later.\nError: {e.Message}. (Press Enter to return to main menu)");
+            Console.ReadLine();
+            break;
+        }
 
         if (numberOfRowsUpdated == 0)
         {
@@ -268,21 +322,5 @@ string GetUserHabit(string message, string typeOfData)
 
         Console.WriteLine("Please enter the correct information. (Press Enter to continue)");
         Console.ReadLine();
-    }
-}
-
-void ExecuteNonQuerySQL(string sqlCommand)
-{
-    using var connection = new SqliteConnection(connectionString);
-    {
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-
-        command.CommandText = sqlCommand;
-
-        command.ExecuteNonQuery();
-
-        connection.Close();
     }
 }
