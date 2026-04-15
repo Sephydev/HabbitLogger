@@ -101,7 +101,22 @@ void AddHabit()
     quantity = Convert.ToInt32(GetUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
     unit = GetUserHabit("Please enter the unit.", "string");
 
-    ExecuteNonQuerySQL($"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')");
+    using var connection = new SqliteConnection(connectionString);
+    {
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+
+        command.CommandText = "INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT) VALUES ($userHabit, $date, $quantity, $unit)";
+        command.Parameters.AddWithValue("$userHabit", userHabit);
+        command.Parameters.AddWithValue("$date", date);
+        command.Parameters.AddWithValue("$quantity", quantity);
+        command.Parameters.AddWithValue("$unit", unit);
+
+        command.ExecuteNonQuery();
+
+        connection.Close();
+    }
 
     Console.WriteLine($"{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
     Console.ReadLine();
@@ -133,7 +148,8 @@ void DeleteHabit()
 
             using var command = connection.CreateCommand();
 
-            command.CommandText = $"DELETE FROM habits WHERE ID = {idToDelete}";
+            command.CommandText = "DELETE FROM habits WHERE ID = $idToDelete";
+            command.Parameters.AddWithValue("$idToDelete", idToDelete);
 
             numberOfRowsDeleted = command.ExecuteNonQuery();
 
@@ -188,7 +204,12 @@ void UpdateHabit()
 
             using var command = connection.CreateCommand();
 
-            command.CommandText = $"UPDATE habits SET HABIT = '{newUserHabit}', DATE = '{newDate}', QUANTITY = {newQuantity}, UNIT = '{newUnit}' WHERE ID = '{idToUpdate}'";
+            command.CommandText = "UPDATE habits SET HABIT = $newUserHabit, DATE = $newDate, QUANTITY = $newQuantity, UNIT = $newUnit WHERE ID = $idToUpdate";
+            command.Parameters.AddWithValue("$newUserHabit", newUserHabit);
+            command.Parameters.AddWithValue("$newDate", newDate);
+            command.Parameters.AddWithValue("$newQuantity", newQuantity);
+            command.Parameters.AddWithValue("$newUnit", newUnit);
+            command.Parameters.AddWithValue("$idToUpdate", idToUpdate);
 
             numberOfRowsUpdated = command.ExecuteNonQuery();
 
