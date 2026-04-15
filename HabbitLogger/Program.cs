@@ -41,13 +41,13 @@ void RunApp ()
                 break;
             case "1":
                 ViewHabit();
+                Console.ReadLine();
                 break;
             case "2":
                 AddHabit();
                 break;
             case "3":
-                Console.WriteLine("UNDER CONSTRUCTION - Please be patient (Press Enter to continue)");
-                Console.ReadLine();
+                deleteHabit();
                 break;
             case "4":
                 Console.WriteLine("UNDER CONSTRUCTION - Please be patient (Press Enter to continue)");
@@ -87,8 +87,6 @@ void ViewHabit()
 
         connection.Close();
     }
-
-    Console.ReadLine();
 }
 
 void AddHabit()
@@ -98,15 +96,35 @@ void AddHabit()
     int quantity;
     string unit;
 
-    userHabit = getUserInput("Please enter the name of the habit.", "string");
-    date = getUserInput("Please enter the date of the habit. (Format dd-mm-yyyy) (Enter 't' to input the today's date)", "date");
-    quantity = Convert.ToInt32(getUserInput("Please enter the quantity. (No decimals allowed)", "int"));
-    unit = getUserInput("Please enter the unit.", "string");
+    userHabit = getUserHabit("Please enter the name of the habit.", "string");
+    date = getUserHabit("Please enter the date of the habit. (Format dd-mm-yyyy) (Enter 't' to input the today's date)", "date");
+    quantity = Convert.ToInt32(getUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
+    unit = getUserHabit("Please enter the unit.", "string");
 
     ExecuteNonQuerySQL($"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')");
 }
 
-string getUserInput(string message, string typeOfData)
+void deleteHabit()
+{
+    string? userInput;
+
+    while (true)
+    {
+        ViewHabit();
+
+        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
+        Console.WriteLine("Please enter the ID of the habit you want to delete.");
+        userInput = Console.ReadLine();
+
+        if (userInput == null)
+            continue;
+
+        ExecuteNonQuerySQL($"DELETE FROM habits WHERE ID = {userInput}");
+        break;
+    }
+}
+
+string getUserHabit(string message, string typeOfData)
 {
     string? userInput;
     string userInputText;
