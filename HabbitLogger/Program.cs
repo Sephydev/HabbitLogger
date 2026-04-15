@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Globalization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 string connectionString = @"Data Source=habit-logger.db";
 
@@ -51,8 +52,7 @@ void RunApp ()
                 DeleteHabit();
                 break;
             case "4":
-                Console.WriteLine("UNDER CONSTRUCTION - Please be patient (Press Enter to continue)");
-                Console.ReadLine();
+                UpdateHabit();
                 break;
             default:
                 Console.WriteLine("You've entered an incorrect option. Please try again. (Press Enter to continue)");
@@ -97,10 +97,10 @@ void AddHabit()
     int quantity;
     string unit;
 
-    userHabit = getUserHabit("Please enter the name of the habit.", "string");
-    date = getUserHabit("Please enter the date of the habit. (Format dd-mm-yyyy) (Enter 't' to input the today's date)", "date");
-    quantity = Convert.ToInt32(getUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
-    unit = getUserHabit("Please enter the unit.", "string");
+    userHabit = GetUserHabit("Please enter the name of the habit.", "string");
+    date = GetUserHabit("Please enter the date of the habit. (Format dd-mm-yyyy) (Enter 't' to input the today's date)", "date");
+    quantity = Convert.ToInt32(GetUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
+    unit = GetUserHabit("Please enter the unit.", "string");
 
     ExecuteNonQuerySQL($"INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT ) VALUES ('{userHabit}', '{date}', {quantity}, '{unit}')");
 
@@ -154,7 +154,62 @@ void DeleteHabit()
     }
 }
 
-string getUserHabit(string message, string typeOfData)
+void UpdateHabit()
+{
+    string? idToUpdate;
+    string newUserHabit;
+    string newDate;
+    int newQuantity;
+    string newUnit;
+
+    int numberOfRowsUpdated;
+
+    while (true)
+    {
+        ViewHabit();
+
+        Console.WriteLine("Please enter the ID of the habit you want to modify.");
+        idToUpdate = Console.ReadLine();
+
+        if (idToUpdate == null || !int.TryParse(idToUpdate, out _))
+        {
+            Console.WriteLine("Please enter a correct ID. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
+        }
+
+        newUserHabit = GetUserHabit("Please enter the new name of the habit.", "string");
+        newDate = GetUserHabit("Please enter the new date of the habit. (Format dd-mm-yyyy) (Enter 't' to input the today's date)", "date");
+        newQuantity = Convert.ToInt32(GetUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
+        newUnit = GetUserHabit("Please enter the unit.", "string");
+
+        using var connection = new SqliteConnection(connectionString);
+        {
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+
+            command.CommandText = $"UPDATE habits SET HABIT = '{newUserHabit}', DATE = '{newDate}', QUANTITY = {newQuantity}, UNIT = '{newUnit}' WHERE ID = '{idToUpdate}'";
+
+            numberOfRowsUpdated = command.ExecuteNonQuery();
+
+            connection.Close();
+        };
+
+        if (numberOfRowsUpdated == 0)
+        {
+            Console.WriteLine("The ID you entered doesn't exist. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
+        }
+
+        Console.WriteLine($"The habit with ID {idToUpdate} has been updated successfully!");
+        Console.ReadLine();
+        break;
+    }
+}
+
+string GetUserHabit(string message, string typeOfData)
 {
     string? userInput;
     string userInputText;
