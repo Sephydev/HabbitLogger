@@ -33,7 +33,7 @@ void RunApp ()
                 break;
             case "1":
                 ViewHabit();
-                Console.WriteLine("(Press Enter to return to main menu.)");
+                Console.WriteLine("\n(Press Enter to return to main menu.)");
                 Console.ReadLine();
                 break;
             case "2":
@@ -84,7 +84,11 @@ void AddHabit()
     quantity = GetHabitQuantity();
     unit = GetHabitUnit();
 
-    AddHabitToDB(userHabit, date, quantity, unit);
+    if(AddHabitToDB(userHabit, date, quantity, unit))
+    {
+        Console.WriteLine($"\n{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
+        Console.ReadLine();
+    }
 }
 
 void DeleteHabit()
@@ -98,14 +102,21 @@ void DeleteHabit()
 
         numberOfRowsDeleted = DeleteHabitFromDB(idToDelete);
 
-        if (numberOfRowsDeleted == 0)
+        if (idToDelete == -1)
         {
-            Console.WriteLine("The ID you entered doesn't exist. (Press Enter to continue)");
+            Console.WriteLine("\nPlease enter a valid ID. (Press Enter to continue)");
             Console.ReadLine();
             continue;
         }
 
-        Console.WriteLine($"The Habit with id {idToDelete} has been successfully deleted! (Press Enter to continue)");
+        if (numberOfRowsDeleted == 0)
+        {
+            Console.WriteLine("\nThe ID you entered doesn't exist. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
+        }
+
+        Console.WriteLine($"\nThe Habit with id {idToDelete} has been successfully deleted! (Press Enter to continue)");
         Console.ReadLine();
         break;
     }
@@ -125,6 +136,13 @@ void UpdateHabit()
     {
         idToUpdate = GetID();
 
+        if (idToUpdate == -1)
+        {
+            Console.WriteLine("\nPlease enter a valid ID. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
+        }
+
         newUserHabit = GetHabitName();
         newDate = GetHabitDate();
         newQuantity = GetHabitQuantity();
@@ -134,12 +152,12 @@ void UpdateHabit()
 
         if (numberOfRowsUpdated == 0)
         {
-            Console.WriteLine("The ID you entered doesn't exist. (Press Enter to continue)");
+            Console.WriteLine("\nThe ID you entered doesn't exist. (Press Enter to continue)");
             Console.ReadLine();
             continue;
         }
 
-        Console.WriteLine($"The habit with ID {idToUpdate} has been updated successfully!");
+        Console.WriteLine($"\nThe habit with ID {idToUpdate} has been updated successfully!");
         Console.ReadLine();
         break;
     }
@@ -152,13 +170,17 @@ string GetHabitName()
     while (true)
     {
         Console.Clear();
+
+        ViewHabit();
+        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
+
         Console.WriteLine("Please enter the name of the habit.");
 
         habitName = Console.ReadLine();
 
         if (habitName == null || habitName.Length == 0)
         {
-            Console.WriteLine("Please enter a valid habit name. (Press Enter to continue)");
+            Console.WriteLine("\nPlease enter a valid habit name. (Press Enter to continue)");
             Console.ReadLine();
             continue;
         }
@@ -176,12 +198,16 @@ string GetHabitDate()
     while (true)
     {
         Console.Clear();
+
+        ViewHabit();
+        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
+
         Console.WriteLine("Please enter a date. (Format dd-MM-yyyy) (Press t to enter today's date)");
         userInput = Console.ReadLine();
 
         if (userInput == null)
         {
-            Console.WriteLine("Please enter a valid date. (Press Enter to continue)");
+            Console.WriteLine("\nPlease enter a valid date. (Press Enter to continue)");
             Console.ReadLine();
             continue;
         }
@@ -194,7 +220,7 @@ string GetHabitDate()
             return habitDate.ToString("dd-MMM-yyyy");
         }
 
-        Console.WriteLine("Please enter a valid date. (Press Enter to continue)");
+        Console.WriteLine("\nPlease enter a valid date. (Press Enter to continue)");
         Console.ReadLine();
     }
 }
@@ -207,12 +233,16 @@ int GetHabitQuantity()
     while (true)
     {
         Console.Clear();
+
+        ViewHabit();
+        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
+
         Console.WriteLine("Please enter a quantity. (No decimals allowed)");
         userInput = Console.ReadLine();
 
         if (userInput == null)
         {
-            Console.WriteLine("Please enter a valid quantity. (Press Enter to continue)");
+            Console.WriteLine("\nPlease enter a valid quantity. (Press Enter to continue)");
             Console.ReadLine();
             continue;
         }
@@ -222,7 +252,7 @@ int GetHabitQuantity()
             return habitQuantity;
         }
 
-        Console.WriteLine("Please enter a valid quantity. (Press Enter to continue)");
+        Console.WriteLine("\nPlease enter a valid quantity. (Press Enter to continue)");
         Console.ReadLine();
     }
 }
@@ -234,13 +264,17 @@ string GetHabitUnit()
     while (true)
     {
         Console.Clear();
+
+        ViewHabit();
+        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
+
         Console.WriteLine("Please enter the unit of the habit.");
 
         habitUnit = Console.ReadLine();
 
         if (habitUnit == null || habitUnit.Length == 0)
         {
-            Console.WriteLine("Please enter a valid habit unit. (Press Enter to continue)");
+            Console.WriteLine("\nPlease enter a valid habit unit. (Press Enter to continue)");
             Console.ReadLine();
             continue;
         }
@@ -264,9 +298,7 @@ int GetID()
 
         if (userInput == null || !int.TryParse(userInput, out habitID))
         {
-            Console.WriteLine("Please enter a valid ID. (Press Enter to continue)");
-            Console.ReadLine();
-            continue;
+            habitID = -1;
         }
 
         return habitID;
@@ -306,8 +338,10 @@ void CreateDB()
     }
 }
 
-void AddHabitToDB(string userHabit, string date, int quantity, string unit)
+bool AddHabitToDB(string userHabit, string date, int quantity, string unit)
 {
+    bool success = false;
+
     try
     {
         using var connection = new SqliteConnection(connectionString);
@@ -327,14 +361,15 @@ void AddHabitToDB(string userHabit, string date, int quantity, string unit)
             connection.Close();
         }
 
-        Console.WriteLine($"{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
-        Console.ReadLine();
+        success = true;
     }
     catch (SqliteException e)
     {
         Console.WriteLine($"\nAn error occurred while trying to add the new habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
         Console.ReadLine();
     }
+
+    return success;
 }
 
 int DeleteHabitFromDB(int idToDelete)
