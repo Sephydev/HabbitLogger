@@ -3,35 +3,7 @@ using System.Globalization;
 
 string connectionString = @"Data Source=habit-logger.db";
 
-try
-{
-    using var connection = new SqliteConnection(connectionString);
-    {
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-
-        command.CommandText = @"
-            CREATE TABLE IF NOT EXISTS habits(
-            ID INTEGER PRIMARY KEY AUTOINCREMENT,
-            HABIT TEXT,
-            DATE TEXT,
-            QUANTITY INTEGER,
-            UNIT TEXT
-        )
-        ";
-
-        command.ExecuteNonQuery();
-
-        connection.Close();
-    }
-}
-catch (SqliteException e)
-{
-    Console.WriteLine($"An Error occured while trying to create the DB. Please try again later.\nError: {e.Message}.\n(Press Enter to exit the app)");
-    Console.ReadLine();
-    Environment.Exit(0);
-}
+CreateDB();
 
 RunApp();
 
@@ -51,9 +23,9 @@ void RunApp ()
         Console.WriteLine("\t- 3 to delete a logged habit");
         Console.WriteLine("\t- 4 to update a logged habit");
 
-        string? userInput = Console.ReadLine();
+        string? userChoice = Console.ReadLine();
 
-        switch (userInput)
+        switch (userChoice)
         {
             case "0":
                 Console.WriteLine("Bye bye!");
@@ -61,7 +33,7 @@ void RunApp ()
                 break;
             case "1":
                 ViewHabit();
-                Console.WriteLine("(Press Enter to continue)");
+                Console.WriteLine("(Press Enter to return to main menu.)");
                 Console.ReadLine();
                 break;
             case "2":
@@ -85,29 +57,12 @@ void ViewHabit()
 {
     try
     {
-        using var connection = new SqliteConnection(connectionString);
+        List<(int id, string habitName, string date, int quantity, string unit)> habitsInfo = GetHabitsDB();
+
+        Console.Clear();
+        foreach(var habit in habitsInfo)
         {
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-
-            command.CommandText = @"SELECT * FROM habits";
-
-            using var reader = command.ExecuteReader();
-
-            Console.Clear();
-            while (reader.Read())
-            {
-                int id = reader.GetInt32(0);
-                string habit = reader.GetString(1);
-                string date = reader.GetString(2);
-                int quantity = reader.GetInt32(3);
-                string unit = reader.GetString(4);
-
-                Console.WriteLine($"ID: {id}\t| Habit: {habit}\t| Date: {date}\t| Quantity: {quantity}\t| Unit: {unit}");
-            }
-
-            connection.Close();
+            Console.WriteLine($"{habit.id}\t| {habit.habitName}\t| {habit.date}\t| {habit.quantity}\t| {habit.unit}");
         }
     } 
     catch (SqliteException e)
@@ -124,38 +79,12 @@ void AddHabit()
     int quantity;
     string unit;
 
-    userHabit = GetUserHabit("Please enter the name of the habit.", "string");
-    date = GetUserHabit("Please enter the date of the habit. (Format dd-mm-yyyy) (Enter 't' to input the today's date)", "date");
-    quantity = Convert.ToInt32(GetUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
-    unit = GetUserHabit("Please enter the unit.", "string");
+    userHabit = GetHabitName();
+    date = GetHabitDate();
+    quantity = GetHabitQuantity();
+    unit = GetHabitUnit();
 
-    try
-    {
-        using var connection = new SqliteConnection(connectionString);
-        {
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-
-            command.CommandText = "INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT) VALUES ($userHabit, $date, $quantity, $unit)";
-            command.Parameters.AddWithValue("$userHabit", userHabit);
-            command.Parameters.AddWithValue("$date", date);
-            command.Parameters.AddWithValue("$quantity", quantity);
-            command.Parameters.AddWithValue("$unit", unit);
-
-            command.ExecuteNonQuery();
-
-            connection.Close();
-        }
-
-        Console.WriteLine($"{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
-        Console.ReadLine();
-    }
-    catch (SqliteException e)
-    {
-        Console.WriteLine($"\nAn error occurred while trying to add the new habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
-        Console.ReadLine();
-    }
+    AddHabitToDB(userHabit, date, quantity, unit);
 }
 
 void DeleteHabit()
@@ -238,10 +167,10 @@ void UpdateHabit()
             continue;
         }
 
-        newUserHabit = GetUserHabit("Please enter the new name of the habit.", "string");
-        newDate = GetUserHabit("Please enter the new date of the habit. (Format dd-mm-yyyy) (Enter 't' to input the today's date)", "date");
-        newQuantity = Convert.ToInt32(GetUserHabit("Please enter the quantity. (No decimals allowed)", "int"));
-        newUnit = GetUserHabit("Please enter the unit.", "string");
+        newUserHabit = GetHabitName();
+        newDate = GetHabitDate();
+        newQuantity = GetHabitQuantity();
+        newUnit = GetHabitUnit();
 
         try
         {
@@ -283,44 +212,201 @@ void UpdateHabit()
     }
 }
 
-string GetUserHabit(string message, string typeOfData)
+string GetHabitName()
 {
-    string? userInput;
-    string userInputText;
-    int userInputNumber;
-    DateTime temp;
+    string? habitName;
 
     while (true)
     {
         Console.Clear();
-        Console.WriteLine(message);
+        Console.WriteLine("Please enter the name of the habit.");
+
+        habitName = Console.ReadLine();
+
+        if (habitName == null || habitName.Length == 0)
+        {
+            Console.WriteLine("Please enter a valid habit name. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
+        }
+
+        return habitName.Trim().ToLower();
+    }
+
+}
+
+string GetHabitDate()
+{
+    string? userInput;
+    DateTime habitDate;
+
+    while (true)
+    {
+        Console.Clear();
+        Console.WriteLine("Please enter a date. (Format dd-MM-yyyy) (Press t to enter today's date)");
         userInput = Console.ReadLine();
 
         if (userInput == null)
-            continue;
-
-        userInputText = userInput.Trim().ToLower();
-
-        if (typeOfData == "date")
         {
-            if (userInput.Trim().ToLower() == "t")
-            {
-                return DateTime.Now.ToString("dd-MMM-yyyy");
-            }
-
-            if (DateTime.TryParseExact(userInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out temp))
-            {
-                return temp.ToString("dd-MMM-yyyy");
-            }
+            Console.WriteLine("Please enter a valid date. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
         }
 
-        if (typeOfData == "int" && int.TryParse(userInput, out userInputNumber) && userInputNumber >= 0)
-            return userInputText;
+        if (userInput.Trim().ToLower() == "t")
+            return DateTime.Now.ToString("dd-MMM-yyyy");
 
-        if (typeOfData == "string" && userInput != null && userInput.Length > 0)
-            return userInputText;
+        if (DateTime.TryParseExact(userInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out habitDate))
+        {
+            return habitDate.ToString("dd-MMM-yyyy");
+        }
 
-        Console.WriteLine("Please enter the correct information. (Press Enter to continue)");
+        Console.WriteLine("Please enter a valid date. (Press Enter to continue)");
         Console.ReadLine();
     }
+}
+
+int GetHabitQuantity()
+{
+    string? userInput;
+    int habitQuantity;
+
+    while (true)
+    {
+        Console.Clear();
+        Console.WriteLine("Please enter a quantity. (No decimals allowed)");
+        userInput = Console.ReadLine();
+
+        if (userInput == null)
+        {
+            Console.WriteLine("Please enter a valid quantity. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
+        }
+
+        if (int.TryParse(userInput, out habitQuantity) && habitQuantity >= 0)
+        {
+            return habitQuantity;
+        }
+
+        Console.WriteLine("Please enter a valid quantity. (Press Enter to continue)");
+        Console.ReadLine();
+    }
+}
+
+string GetHabitUnit()
+{
+    string? habitUnit;
+
+    while (true)
+    {
+        Console.Clear();
+        Console.WriteLine("Please enter the unit of the habit.");
+
+        habitUnit = Console.ReadLine();
+
+        if (habitUnit == null || habitUnit.Length == 0)
+        {
+            Console.WriteLine("Please enter a valid habit unit. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
+        }
+
+        return habitUnit.Trim().ToLower();
+    }
+}
+
+void CreateDB()
+{
+    try
+    {
+        using var connection = new SqliteConnection(connectionString);
+        {
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+
+            command.CommandText = @"
+            CREATE TABLE IF NOT EXISTS habits(
+            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            HABIT TEXT,
+            DATE TEXT,
+            QUANTITY INTEGER,
+            UNIT TEXT
+        )
+        ";
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
+        }
+    }
+    catch (SqliteException e)
+    {
+        Console.WriteLine($"An Error occured while trying to create the DB. Please try again later.\nError: {e.Message}.\n(Press Enter to exit the app)");
+        Console.ReadLine();
+        Environment.Exit(0);
+    }
+}
+
+void AddHabitToDB(string userHabit, string date, int quantity, string unit)
+{
+    try
+    {
+        using var connection = new SqliteConnection(connectionString);
+        {
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+
+            command.CommandText = "INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT) VALUES ($userHabit, $date, $quantity, $unit)";
+            command.Parameters.AddWithValue("$userHabit", userHabit);
+            command.Parameters.AddWithValue("$date", date);
+            command.Parameters.AddWithValue("$quantity", quantity);
+            command.Parameters.AddWithValue("$unit", unit);
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
+        }
+
+        Console.WriteLine($"{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
+        Console.ReadLine();
+    }
+    catch (SqliteException e)
+    {
+        Console.WriteLine($"\nAn error occurred while trying to add the new habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
+        Console.ReadLine();
+    }
+}
+
+List<(int id, string habitName, string date, int quantity, string unit)> GetHabitsDB()
+{
+    List<(int id, string habitName, string date, int quantity, string unit)> habitsInfo = new();
+
+        using var connection = new SqliteConnection(connectionString);
+        {
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+
+            command.CommandText = @"SELECT * FROM habits";
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                int id = reader.GetInt32(0);
+                string habit = reader.GetString(1);
+                string date = reader.GetString(2);
+                int quantity = reader.GetInt32(3);
+                string unit = reader.GetString(4);
+
+                habitsInfo.Add((id, habit, date, quantity, unit));
+            }
+
+            connection.Close();
+        }
+
+        return habitsInfo;    
 }
