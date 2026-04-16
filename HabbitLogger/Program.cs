@@ -89,46 +89,14 @@ void AddHabit()
 
 void DeleteHabit()
 {
-    string? idToDelete;
+    int idToDelete;
     int numberOfRowsDeleted;
 
     while (true)
     {
-        ViewHabit();
+        idToDelete = GetID();
 
-        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
-        Console.WriteLine("Please enter the ID of the habits you want to delete.");
-        idToDelete = Console.ReadLine();
-
-        if (idToDelete == null || !int.TryParse(idToDelete, out _))
-        {
-            Console.WriteLine("Please enter a valid ID. (Press Enter to continue)");
-            Console.ReadLine();
-            continue;
-        }
-
-        try
-        {
-            using var connection = new SqliteConnection(connectionString);
-            {
-                connection.Open();
-
-                using var command = connection.CreateCommand();
-
-                command.CommandText = "DELETE FROM habits WHERE ID = $idToDelete";
-                command.Parameters.AddWithValue("$idToDelete", idToDelete);
-
-                numberOfRowsDeleted = command.ExecuteNonQuery();
-
-                connection.Close();
-            }
-        }
-        catch (SqliteException e)
-        {
-            Console.WriteLine($"\nAn error occurred while trying to delete the habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
-            Console.ReadLine();
-            break;
-        }
+        numberOfRowsDeleted = DeleteHabitFromDB(idToDelete);
 
         if (numberOfRowsDeleted == 0)
         {
@@ -145,7 +113,7 @@ void DeleteHabit()
 
 void UpdateHabit()
 {
-    string? idToUpdate;
+    int idToUpdate;
     string newUserHabit;
     string newDate;
     int newQuantity;
@@ -155,49 +123,14 @@ void UpdateHabit()
 
     while (true)
     {
-        ViewHabit();
-
-        Console.WriteLine("Please enter the ID of the habit you want to modify.");
-        idToUpdate = Console.ReadLine();
-
-        if (idToUpdate == null || !int.TryParse(idToUpdate, out _))
-        {
-            Console.WriteLine("Please enter a correct ID. (Press Enter to continue)");
-            Console.ReadLine();
-            continue;
-        }
+        idToUpdate = GetID();
 
         newUserHabit = GetHabitName();
         newDate = GetHabitDate();
         newQuantity = GetHabitQuantity();
         newUnit = GetHabitUnit();
 
-        try
-        {
-            using var connection = new SqliteConnection(connectionString);
-            {
-                connection.Open();
-
-                using var command = connection.CreateCommand();
-
-                command.CommandText = "UPDATE habits SET HABIT = $newUserHabit, DATE = $newDate, QUANTITY = $newQuantity, UNIT = $newUnit WHERE ID = $idToUpdate";
-                command.Parameters.AddWithValue("$newUserHabit", newUserHabit);
-                command.Parameters.AddWithValue("$newDate", newDate);
-                command.Parameters.AddWithValue("$newQuantity", newQuantity);
-                command.Parameters.AddWithValue("$newUnit", newUnit);
-                command.Parameters.AddWithValue("$idToUpdate", idToUpdate);
-
-                numberOfRowsUpdated = command.ExecuteNonQuery();
-
-                connection.Close();
-            }
-        } 
-        catch (SqliteException e)
-        {
-            Console.WriteLine($"\nAn error occurred while trying to update the habit. Please try again later.\nError: {e.Message}. (Press Enter to return to main menu)");
-            Console.ReadLine();
-            break;
-        }
+        numberOfRowsUpdated = UpdateHabitFromDB(idToUpdate, newUserHabit, newDate, newQuantity, newUnit);
 
         if (numberOfRowsUpdated == 0)
         {
@@ -316,6 +249,30 @@ string GetHabitUnit()
     }
 }
 
+int GetID()
+{
+    string? userInput;
+    int habitID;
+
+    while (true)
+    {
+        ViewHabit();
+
+        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
+        Console.WriteLine("Please enter the ID of the habits you want to delete.");
+        userInput = Console.ReadLine();
+
+        if (userInput == null || !int.TryParse(userInput, out habitID))
+        {
+            Console.WriteLine("Please enter a valid ID. (Press Enter to continue)");
+            Console.ReadLine();
+            continue;
+        }
+
+        return habitID;
+    }
+}
+
 void CreateDB()
 {
     try
@@ -378,6 +335,67 @@ void AddHabitToDB(string userHabit, string date, int quantity, string unit)
         Console.WriteLine($"\nAn error occurred while trying to add the new habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
         Console.ReadLine();
     }
+}
+
+int DeleteHabitFromDB(int idToDelete)
+{
+    int numberOfRowsDeleted = 0;
+
+    try
+    {
+        using var connection = new SqliteConnection(connectionString);
+        {
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+
+            command.CommandText = "DELETE FROM habits WHERE ID = $idToDelete";
+            command.Parameters.AddWithValue("$idToDelete", idToDelete);
+
+            numberOfRowsDeleted = command.ExecuteNonQuery();
+
+            connection.Close();
+        }
+    }
+    catch (SqliteException e)
+    {
+        Console.WriteLine($"\nAn error occurred while trying to delete the habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
+        Console.ReadLine();
+    }
+
+    return numberOfRowsDeleted;
+}
+
+int UpdateHabitFromDB(int idToUpdate, string newUserHabit, string newDate, int newQuantity, string newUnit)
+{
+    int numberOfRowsUpdated = 0;
+    try
+    {
+        using var connection = new SqliteConnection(connectionString);
+        {
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+
+            command.CommandText = "UPDATE habits SET HABIT = $newUserHabit, DATE = $newDate, QUANTITY = $newQuantity, UNIT = $newUnit WHERE ID = $idToUpdate";
+            command.Parameters.AddWithValue("$newUserHabit", newUserHabit);
+            command.Parameters.AddWithValue("$newDate", newDate);
+            command.Parameters.AddWithValue("$newQuantity", newQuantity);
+            command.Parameters.AddWithValue("$newUnit", newUnit);
+            command.Parameters.AddWithValue("$idToUpdate", idToUpdate);
+
+            numberOfRowsUpdated = command.ExecuteNonQuery();
+
+            connection.Close();
+        }
+    }
+    catch (SqliteException e)
+    {
+        Console.WriteLine($"\nAn error occurred while trying to update the habit. Please try again later.\nError: {e.Message}. (Press Enter to return to main menu)");
+        Console.ReadLine();
+    }
+
+    return numberOfRowsUpdated;
 }
 
 List<(int id, string habitName, string date, int quantity, string unit)> GetHabitsDB()
