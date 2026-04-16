@@ -60,10 +60,13 @@ void ViewHabit()
         List<(int id, string habitName, string date, int quantity, string unit)> habitsInfo = GetHabitsDB();
 
         Console.Clear();
+
         foreach(var habit in habitsInfo)
         {
             Console.WriteLine($"{habit.id}\t| {habit.habitName}\t| {habit.date}\t| {habit.quantity}\t| {habit.unit}");
         }
+
+        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
     } 
     catch (SqliteException e)
     {
@@ -172,7 +175,6 @@ string GetHabitName()
         Console.Clear();
 
         ViewHabit();
-        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
 
         Console.WriteLine("Please enter the name of the habit.");
 
@@ -200,8 +202,7 @@ string GetHabitDate()
         Console.Clear();
 
         ViewHabit();
-        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
-
+        
         Console.WriteLine("Please enter a date. (Format dd-MM-yyyy) (Press t to enter today's date)");
         userInput = Console.ReadLine();
 
@@ -235,7 +236,6 @@ int GetHabitQuantity()
         Console.Clear();
 
         ViewHabit();
-        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
 
         Console.WriteLine("Please enter a quantity. (No decimals allowed)");
         userInput = Console.ReadLine();
@@ -266,7 +266,6 @@ string GetHabitUnit()
         Console.Clear();
 
         ViewHabit();
-        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
 
         Console.WriteLine("Please enter the unit of the habit.");
 
@@ -292,7 +291,6 @@ int GetID()
     {
         ViewHabit();
 
-        Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
         Console.WriteLine("Please enter the ID of the habits you want to delete.");
         userInput = Console.ReadLine();
 
