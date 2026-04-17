@@ -324,14 +324,11 @@ void CreateDB()
         ";
 
             command.ExecuteNonQuery();
-
-            connection.Close();
         }
     }
     catch (SqliteException e)
     {
-        Console.WriteLine($"An Error occured while trying to create the DB. Please try again later.\nError: {e.Message}.\n(Press Enter to exit the app)");
-        Console.ReadLine();
+        DisplayErrorMessageDB(e, "create the DB");
         Environment.Exit(0);
     }
 }
@@ -355,16 +352,13 @@ bool AddHabitToDB(string userHabit, string date, int quantity, string unit)
             command.Parameters.AddWithValue("$unit", unit);
 
             command.ExecuteNonQuery();
-
-            connection.Close();
         }
 
         success = true;
     }
     catch (SqliteException e)
     {
-        Console.WriteLine($"\nAn error occurred while trying to add the new habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
-        Console.ReadLine();
+        DisplayErrorMessageDB(e, "add the habit");
     }
 
     return success;
@@ -386,14 +380,11 @@ int DeleteHabitFromDB(int idToDelete)
             command.Parameters.AddWithValue("$idToDelete", idToDelete);
 
             numberOfRowsDeleted = command.ExecuteNonQuery();
-
-            connection.Close();
         }
     }
     catch (SqliteException e)
     {
-        Console.WriteLine($"\nAn error occurred while trying to delete the habit. Please try again later.\nError: {e.Message}.\n(Press Enter to return to main menu)");
-        Console.ReadLine();
+        DisplayErrorMessageDB(e, "delete the habit");
     }
 
     return numberOfRowsDeleted;
@@ -418,14 +409,11 @@ int UpdateHabitFromDB(int idToUpdate, string newUserHabit, string newDate, int n
             command.Parameters.AddWithValue("$idToUpdate", idToUpdate);
 
             numberOfRowsUpdated = command.ExecuteNonQuery();
-
-            connection.Close();
         }
     }
     catch (SqliteException e)
     {
-        Console.WriteLine($"\nAn error occurred while trying to update the habit. Please try again later.\nError: {e.Message}. (Press Enter to return to main menu)");
-        Console.ReadLine();
+        DisplayErrorMessageDB(e, "update the habit");
     }
 
     return numberOfRowsUpdated;
@@ -460,4 +448,10 @@ List<(int id, string habitName, string date, int quantity, string unit)> GetHabi
         }
 
         return habitsInfo;    
+}
+
+void DisplayErrorMessageDB(SqliteException e, string action)
+{
+    Console.WriteLine($"\nAn error occurred while trying to {action}. Please try again later.\nError: {e.Message}. (Press Enter to return to main menu)");
+    Console.ReadLine();
 }
