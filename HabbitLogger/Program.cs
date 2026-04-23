@@ -3,7 +3,8 @@ using System.Globalization;
 
 string connectionString = @"Data Source=habit-logger.db";
 
-CreateDB();
+if (!File.Exists("./habit-logger.db"))
+    CreateDB();
 
 RunApp();
 
