@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Globalization;
+using static HabbitLogger.ValidationHelper;
 
 string connectionString = @"Data Source=habit-logger.db";
 
@@ -116,12 +117,18 @@ void DeleteHabit()
         idToDelete = GetID();
 
         if (!ValidateID(idToDelete))
+        {
+            DisplayBasicMessage("\nPlease enter a valid ID. (Press Enter to continue)");
             continue;
+        }
 
         numberOfRowsDeleted = DeleteHabitFromDB(idToDelete);
 
         if (!ValidateNumberOfRows(numberOfRowsDeleted))
+        {
+            DisplayBasicMessage("\nThe ID you entered doesn't exist. (Press Enter to continue)");
             continue;
+        }
 
         DisplayBasicMessage($"\nThe Habit with id {idToDelete} has been successfully deleted! (Press Enter to continue)");
         break;
@@ -143,7 +150,10 @@ void UpdateHabit()
         idToUpdate = GetID();
 
         if (!ValidateID(idToUpdate))
+        {
+            DisplayBasicMessage("\nPlease enter a valid ID. (Press Enter to continue)");
             continue;
+        }
 
         newUserHabit = GetHabitName();
         newDate = GetHabitDate();
@@ -153,7 +163,10 @@ void UpdateHabit()
         numberOfRowsUpdated = UpdateHabitFromDB(idToUpdate, newUserHabit, newDate, newQuantity, newUnit);
 
         if (!ValidateNumberOfRows(numberOfRowsUpdated))
+        {
+            DisplayBasicMessage("\nThe ID you entered doesn't exist. (Press Enter to continue)");
             continue;
+        }
 
         DisplayBasicMessage($"\nThe habit with ID {idToUpdate} has been updated successfully!");
 
@@ -161,31 +174,7 @@ void UpdateHabit()
     }
 }
 
-bool ValidateID(int idToVerify)
-{
-    bool success = true;
 
-    if (idToVerify == -1)
-    {
-        DisplayBasicMessage("\nPlease enter a valid ID. (Press Enter to continue)");
-        success = false;
-    }
-
-    return success;
-}
-
-bool ValidateNumberOfRows(int numberOfRows)
-{
-    bool success = true;
-
-    if (numberOfRows == 0)
-    {
-        DisplayBasicMessage("\nThe ID you entered doesn't exist. (Press Enter to continue)");
-        success = false;
-    }
-
-    return success;
-}
 
 string GetHabitName()
 {
@@ -206,16 +195,6 @@ string GetHabitName()
         return habitName.Trim().ToLower();
     }
 
-}
-
-bool ValidateHabitTextData(string? habitTextData)
-{
-    bool success = true;
-
-    if (habitTextData == null || habitTextData.Length == 0)
-        success = false;
-
-    return success;
 }
 
 string GetHabitDate()
@@ -243,16 +222,6 @@ string GetHabitDate()
     }
 }
 
-bool ValidateHabitDate(string? userInput)
-{
-    bool success = true;
-
-    if (userInput == null || (userInput.Trim().ToLower() != "t" && !DateTime.TryParseExact(userInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out _)))
-        success = false;
-
-    return success;
-}
-
 int GetHabitQuantity()
 {
     string? userInput;
@@ -273,16 +242,6 @@ int GetHabitQuantity()
 
         return habitQuantity;
     }
-}
-
-bool ValidateHabitQuantity(string? userInput)
-{
-    bool success = true;
-
-    if (userInput == null || !int.TryParse(userInput, out _))
-        success = false;
-
-    return success;
 }
 
 string GetHabitUnit()
