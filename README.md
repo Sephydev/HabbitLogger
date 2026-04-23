@@ -32,7 +32,7 @@ Console based CRUD application to track occurrences of different habits. Develop
   - CRUD DB functions
     -- From the main menu users can Create, Read, Update or Delete entries for whichever habit they want. They need to enter the habit name, the date (format : dd-MMM-yyyy or "t" to automatically input today's date), quantity and unit.
     -- User input are automatically checked to make sure they are in the correct and realistic format.
-  - Registered Habit output
+  - Registered Habit output.  
   ![Habit Display](./ReadMeAsset/HabitDisplay.png)
 
 ## How to run it
