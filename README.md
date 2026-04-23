@@ -44,8 +44,8 @@ Console based CRUD application to track occurrences of different habits. Develop
 ### Steps
 
 ```bash
-git clone https://github.com/Sephydev/STUDY.CSharp.HabbitLogger.git
-cd STUDY.CSharp.HabbitLogger/HabbitLogger
+git clone https://github.com/Sephydev/HabbitLogger.git
+cd HabbitLogger/HabbitLogger
 dotnet run
 ```
 
