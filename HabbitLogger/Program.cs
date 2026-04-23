@@ -312,11 +312,44 @@ void CreateDB()
         ";
 
         command.ExecuteNonQuery();
+
+        GenerateRandomData();
     }
     catch (SqliteException e)
     {
         DisplayErrorMessageDB(e, "create the DB");
         Environment.Exit(0);
+    }
+}
+
+void GenerateRandomData()
+{
+    var rand = new Random();
+    
+    List<string[]> habitList = new List<string[]> {
+        new [] {"Running", "km" },
+        new [] {"Walking", "steps"},
+        new [] {"Reading", "pages"},
+        new [] {"Drinking water", "glasses"},
+        new [] {"Meditation", "minutes"},
+        new [] {"Workout", "sessions"},
+        new [] {"Cycling", "km"},
+        new [] {"Coding Practice", "hours"},
+        new [] {"Sleep", "hours"},
+        new [] {"Calories intake", "kcal"},
+        new [] {"Stretching", "minutes"},
+        new [] {"Journaling", "entries"}
+    };
+
+    for (int i = 0; i < 100; i++)
+    {
+        string[] randomHabit = habitList[rand.Next(0, 12)];
+        string randomHabitName = randomHabit[0];
+        string randomHabitUnit = randomHabit[1];
+        string todayDate = DateTime.Now.ToString("dd-MMM-yyyy");
+        int quantity = rand.Next(1, 11);
+
+        AddHabitToDB(randomHabitName, todayDate, quantity, randomHabitUnit);
     }
 }
 
