@@ -28,12 +28,12 @@ Console based CRUD application to track occurrences of different habits. Develop
     -- The program uses a SQLite db connection to store and read information.
     -- If no database exists, or the correct table does not exist they will be created with random data on program start.
   - A console based UI where users can navigate by entering options.
-  [Main menu](./ReadMeAsset/MainMenu.png)
+  ![Main menu](./ReadMeAsset/MainMenu.png)
   - CRUD DB functions
     -- From the main menu users can Create, Read, Update or Delete entries for whichever habit they want. They need to enter the habit name, the date (format : dd-MMM-yyyy or "t" to automatically input today's date), quantity and unit.
     -- User input are automatically checked to make sure they are in the correct and realistic format.
   - Registered Habit output
-  [Habit Display](./ReadMeAsset/HabitDisplay.png)
+  ![Habit Display](./ReadMeAsset/HabitDisplay.png)
 
 ## How to run it
 
