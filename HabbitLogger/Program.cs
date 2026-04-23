@@ -3,8 +3,7 @@ using System.Globalization;
 
 string connectionString = @"Data Source=habit-logger.db";
 
-if (!File.Exists("./habit-logger.db"))
-    CreateDB();
+CreateDB();
 
 RunApp();
 
@@ -303,6 +302,7 @@ int GetID()
 
 void CreateDB()
 {
+    bool fileExist = File.Exists("./habit-logger.db");
     try
     {
         using var connection = new SqliteConnection(connectionString);
@@ -323,7 +323,8 @@ void CreateDB()
 
         command.ExecuteNonQuery();
 
-        GenerateRandomData();
+        if (!fileExist)
+            GenerateRandomData();
     }
     catch (SqliteException e)
     {
@@ -353,7 +354,7 @@ void GenerateRandomData()
 
     for (int i = 0; i < 100; i++)
     {
-        string[] randomHabit = habitList[rand.Next(0, 12)];
+        string[] randomHabit = habitList[rand.Next(0, habitList.Count)];
         string randomHabitName = randomHabit[0];
         string randomHabitUnit = randomHabit[1];
         string todayDate = DateTime.Now.ToString("dd-MMM-yyyy");
