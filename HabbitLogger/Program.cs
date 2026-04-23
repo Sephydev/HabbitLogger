@@ -62,12 +62,21 @@ void ViewHabit()
     try
     {
         List<(int id, string habitName, string date, int quantity, string unit)> habitsInfo = GetHabitsDB();
+        
 
         Console.Clear();
 
         foreach (var habit in habitsInfo)
         {
-            Console.WriteLine($"{habit.id}\t| {habit.habitName}\t| {habit.date}\t| {habit.quantity}\t| {habit.unit}");
+            string tabulation = "\t";
+
+            if (habit.habitName.Length <= 13)
+                tabulation = "\t\t";
+
+            if (habit.habitName.Length <= 5)
+                tabulation = "\t\t\t";
+
+            Console.WriteLine($"{habit.id}\t| {habit.habitName}{tabulation}| {habit.date}\t| {habit.quantity}\t| {habit.unit}");
         }
 
         Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
