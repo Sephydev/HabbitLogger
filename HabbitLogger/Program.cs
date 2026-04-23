@@ -174,8 +174,6 @@ void UpdateHabit()
     }
 }
 
-
-
 string GetHabitName()
 {
     string? habitName;
