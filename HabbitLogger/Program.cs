@@ -355,7 +355,7 @@ void GenerateRandomData()
     for (int i = 0; i < 100; i++)
     {
         string[] randomHabit = habitList[rand.Next(0, habitList.Count)];
-        string randomHabitName = randomHabit[0];
+        string randomHabitName = randomHabit[0].ToLower();
         string randomHabitUnit = randomHabit[1];
         string todayDate = DateTime.Now.ToString("dd-MMM-yyyy");
         int quantity = rand.Next(1, 11);
