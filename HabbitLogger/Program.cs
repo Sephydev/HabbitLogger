@@ -197,7 +197,7 @@ string GetHabitName()
 
         habitName = Console.ReadLine();
 
-        if (habitName == null || habitName.Length == 0)
+        if (!ValidateHabitTextData(habitName))
         {
             DisplayBasicMessage("\nPlease enter a valid habit name. (Press Enter to continue)");
             continue;
@@ -206,6 +206,16 @@ string GetHabitName()
         return habitName.Trim().ToLower();
     }
 
+}
+
+bool ValidateHabitTextData(string? habitTextData)
+{
+    bool success = true;
+
+    if (habitTextData == null || habitTextData.Length == 0)
+        success = false;
+
+    return success;
 }
 
 string GetHabitDate()
@@ -218,7 +228,7 @@ string GetHabitDate()
         Console.WriteLine("Please enter a date. (Format dd-MM-yyyy) (Press t to enter today's date)");
         userInput = Console.ReadLine();
 
-        if (userInput == null)
+        if (!ValidateHabitDate(userInput))
         {
             DisplayBasicMessage("\nPlease enter a valid date. (Press Enter to continue)");
             continue;
@@ -227,13 +237,20 @@ string GetHabitDate()
         if (userInput.Trim().ToLower() == "t")
             return DateTime.Now.ToString("dd-MMM-yyyy");
 
-        if (DateTime.TryParseExact(userInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out habitDate))
-        {
-            return habitDate.ToString("dd-MMM-yyyy");
-        }
-
-        DisplayBasicMessage("\nPlease enter a valid date. (Press Enter to continue)");
+        DateTime.TryParseExact(userInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out habitDate);
+            
+        return habitDate.ToString("dd-MMM-yyyy");
     }
+}
+
+bool ValidateHabitDate(string? userInput)
+{
+    bool success = true;
+
+    if (userInput == null || (userInput.Trim().ToLower() != "t" && !DateTime.TryParseExact(userInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out _)))
+        success = false;
+
+    return success;
 }
 
 int GetHabitQuantity()
@@ -246,17 +263,26 @@ int GetHabitQuantity()
         Console.WriteLine("Please enter a quantity. (No decimals allowed)");
         userInput = Console.ReadLine();
 
-        if (userInput == null)
+        if (!ValidateHabitQuantity(userInput))
         {
             DisplayBasicMessage("\nPlease enter a valid quantity. (Press Enter to continue)");
             continue;
         }
 
-        if (int.TryParse(userInput, out habitQuantity) && habitQuantity >= 0)
-            return habitQuantity;
+        int.TryParse(userInput, out habitQuantity);
 
-        DisplayBasicMessage("\nPlease enter a valid quantity. (Press Enter to continue)");
+        return habitQuantity;
     }
+}
+
+bool ValidateHabitQuantity(string? userInput)
+{
+    bool success = true;
+
+    if (userInput == null || !int.TryParse(userInput, out _))
+        success = false;
+
+    return success;
 }
 
 string GetHabitUnit()
@@ -269,7 +295,7 @@ string GetHabitUnit()
 
         habitUnit = Console.ReadLine();
 
-        if (habitUnit == null || habitUnit.Length == 0)
+        if (!ValidateHabitTextData(habitUnit))
         {
             DisplayBasicMessage("\nPlease enter a valid habit unit. (Press Enter to continue)");
             continue;
