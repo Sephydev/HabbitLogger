@@ -7,34 +7,25 @@ CreateDB();
 
 RunApp();
 
-void RunApp ()
+void RunApp()
 {
     bool running = true;
 
     while (running)
     {
-        Console.Clear();
-        Console.WriteLine("Welcome to Habit Logger!");
-        Console.WriteLine("-------------------------------------------");
-        Console.WriteLine("Please select one of the following options:");
-        Console.WriteLine("\t- 0 to exit the application");
-        Console.WriteLine("\t- 1 to view your logged habits");
-        Console.WriteLine("\t- 2 to add a new habit log");
-        Console.WriteLine("\t- 3 to delete a logged habit");
-        Console.WriteLine("\t- 4 to update a logged habit");
+        DisplayMainMenu();
 
         string? userChoice = Console.ReadLine();
 
         switch (userChoice)
         {
             case "0":
-                Console.WriteLine("Bye bye!");
+                DisplayBasicMessage("Bye bye!");
                 running = false;
                 break;
             case "1":
                 ViewHabit();
-                Console.WriteLine("\n(Press Enter to return to main menu.)");
-                Console.ReadLine();
+                DisplayBasicMessage("\n(Press Enter to return to main menu.)");
                 break;
             case "2":
                 AddHabit();
@@ -46,11 +37,23 @@ void RunApp ()
                 UpdateHabit();
                 break;
             default:
-                Console.WriteLine("You've entered an incorrect option. Please try again. (Press Enter to continue)");
-                Console.ReadLine();
+                DisplayBasicMessage("You've entered an incorrect option. Please try again. (Press Enter to continue)");
                 break;
         }
     }
+}
+
+void DisplayMainMenu()
+{
+    Console.Clear();
+    Console.WriteLine("Welcome to Habit Logger!");
+    Console.WriteLine("-------------------------------------------");
+    Console.WriteLine("Please select one of the following options:");
+    Console.WriteLine("\t- 0 to exit the application");
+    Console.WriteLine("\t- 1 to view your logged habits");
+    Console.WriteLine("\t- 2 to add a new habit log");
+    Console.WriteLine("\t- 3 to delete a logged habit");
+    Console.WriteLine("\t- 4 to update a logged habit");
 }
 
 void ViewHabit()
@@ -61,17 +64,16 @@ void ViewHabit()
 
         Console.Clear();
 
-        foreach(var habit in habitsInfo)
+        foreach (var habit in habitsInfo)
         {
             Console.WriteLine($"{habit.id}\t| {habit.habitName}\t| {habit.date}\t| {habit.quantity}\t| {habit.unit}");
         }
 
         Console.WriteLine("\n----------------------------------------------------------------------------------------------\n");
-    } 
+    }
     catch (SqliteException e)
     {
-        Console.WriteLine($"\nAn error occured while trying to view the DB contents. Please try again later.\nError: {e.Message}.\n(Press Enter to return to the main menu)");
-        Console.ReadLine();
+        DisplayErrorMessageDB(e, "view the habits");
     }
 }
 
@@ -82,15 +84,16 @@ void AddHabit()
     int quantity;
     string unit;
 
+    ViewHabit();
+
     userHabit = GetHabitName();
     date = GetHabitDate();
     quantity = GetHabitQuantity();
     unit = GetHabitUnit();
 
-    if(AddHabitToDB(userHabit, date, quantity, unit))
+    if (AddHabitToDB(userHabit, date, quantity, unit))
     {
-        Console.WriteLine($"\n{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
-        Console.ReadLine();
+        DisplayBasicMessage($"\n{userHabit} has been added to the Habbit Logger! (Press Enter to continue)");
     }
 }
 
@@ -103,24 +106,15 @@ void DeleteHabit()
     {
         idToDelete = GetID();
 
+        if (!ValidateID(idToDelete))
+            continue;
+
         numberOfRowsDeleted = DeleteHabitFromDB(idToDelete);
 
-        if (idToDelete == -1)
-        {
-            Console.WriteLine("\nPlease enter a valid ID. (Press Enter to continue)");
-            Console.ReadLine();
+        if (!ValidateNumberOfRows(numberOfRowsDeleted))
             continue;
-        }
 
-        if (numberOfRowsDeleted == 0)
-        {
-            Console.WriteLine("\nThe ID you entered doesn't exist. (Press Enter to continue)");
-            Console.ReadLine();
-            continue;
-        }
-
-        Console.WriteLine($"\nThe Habit with id {idToDelete} has been successfully deleted! (Press Enter to continue)");
-        Console.ReadLine();
+        DisplayBasicMessage($"\nThe Habit with id {idToDelete} has been successfully deleted! (Press Enter to continue)");
         break;
     }
 }
@@ -139,12 +133,8 @@ void UpdateHabit()
     {
         idToUpdate = GetID();
 
-        if (idToUpdate == -1)
-        {
-            Console.WriteLine("\nPlease enter a valid ID. (Press Enter to continue)");
-            Console.ReadLine();
+        if (!ValidateID(idToUpdate))
             continue;
-        }
 
         newUserHabit = GetHabitName();
         newDate = GetHabitDate();
@@ -153,17 +143,39 @@ void UpdateHabit()
 
         numberOfRowsUpdated = UpdateHabitFromDB(idToUpdate, newUserHabit, newDate, newQuantity, newUnit);
 
-        if (numberOfRowsUpdated == 0)
-        {
-            Console.WriteLine("\nThe ID you entered doesn't exist. (Press Enter to continue)");
-            Console.ReadLine();
+        if (!ValidateNumberOfRows(numberOfRowsUpdated))
             continue;
-        }
 
-        Console.WriteLine($"\nThe habit with ID {idToUpdate} has been updated successfully!");
-        Console.ReadLine();
+        DisplayBasicMessage($"\nThe habit with ID {idToUpdate} has been updated successfully!");
+
         break;
     }
+}
+
+bool ValidateID(int idToVerify)
+{
+    bool success = true;
+
+    if (idToVerify == -1)
+    {
+        DisplayBasicMessage("\nPlease enter a valid ID. (Press Enter to continue)");
+        success = false;
+    }
+
+    return success;
+}
+
+bool ValidateNumberOfRows(int numberOfRows)
+{
+    bool success = true;
+
+    if (numberOfRows == 0)
+    {
+        DisplayBasicMessage("\nThe ID you entered doesn't exist. (Press Enter to continue)");
+        success = false;
+    }
+
+    return success;
 }
 
 string GetHabitName()
@@ -172,18 +184,13 @@ string GetHabitName()
 
     while (true)
     {
-        Console.Clear();
-
-        ViewHabit();
-
         Console.WriteLine("Please enter the name of the habit.");
 
         habitName = Console.ReadLine();
 
         if (habitName == null || habitName.Length == 0)
         {
-            Console.WriteLine("\nPlease enter a valid habit name. (Press Enter to continue)");
-            Console.ReadLine();
+            DisplayBasicMessage("\nPlease enter a valid habit name. (Press Enter to continue)");
             continue;
         }
 
@@ -199,17 +206,12 @@ string GetHabitDate()
 
     while (true)
     {
-        Console.Clear();
-
-        ViewHabit();
-        
         Console.WriteLine("Please enter a date. (Format dd-MM-yyyy) (Press t to enter today's date)");
         userInput = Console.ReadLine();
 
         if (userInput == null)
         {
-            Console.WriteLine("\nPlease enter a valid date. (Press Enter to continue)");
-            Console.ReadLine();
+            DisplayBasicMessage("\nPlease enter a valid date. (Press Enter to continue)");
             continue;
         }
 
@@ -221,8 +223,7 @@ string GetHabitDate()
             return habitDate.ToString("dd-MMM-yyyy");
         }
 
-        Console.WriteLine("\nPlease enter a valid date. (Press Enter to continue)");
-        Console.ReadLine();
+        DisplayBasicMessage("\nPlease enter a valid date. (Press Enter to continue)");
     }
 }
 
@@ -233,27 +234,19 @@ int GetHabitQuantity()
 
     while (true)
     {
-        Console.Clear();
-
-        ViewHabit();
-
         Console.WriteLine("Please enter a quantity. (No decimals allowed)");
         userInput = Console.ReadLine();
 
         if (userInput == null)
         {
-            Console.WriteLine("\nPlease enter a valid quantity. (Press Enter to continue)");
-            Console.ReadLine();
+            DisplayBasicMessage("\nPlease enter a valid quantity. (Press Enter to continue)");
             continue;
         }
 
         if (int.TryParse(userInput, out habitQuantity) && habitQuantity >= 0)
-        {
             return habitQuantity;
-        }
 
-        Console.WriteLine("\nPlease enter a valid quantity. (Press Enter to continue)");
-        Console.ReadLine();
+        DisplayBasicMessage("\nPlease enter a valid quantity. (Press Enter to continue)");
     }
 }
 
@@ -263,18 +256,13 @@ string GetHabitUnit()
 
     while (true)
     {
-        Console.Clear();
-
-        ViewHabit();
-
         Console.WriteLine("Please enter the unit of the habit.");
 
         habitUnit = Console.ReadLine();
 
         if (habitUnit == null || habitUnit.Length == 0)
         {
-            Console.WriteLine("\nPlease enter a valid habit unit. (Press Enter to continue)");
-            Console.ReadLine();
+            DisplayBasicMessage("\nPlease enter a valid habit unit. (Press Enter to continue)");
             continue;
         }
 
@@ -291,7 +279,7 @@ int GetID()
     {
         ViewHabit();
 
-        Console.WriteLine("Please enter the ID of the habits you want to delete.");
+        Console.WriteLine("Please enter the ID of the habits you want to delete/update.");
         userInput = Console.ReadLine();
 
         if (userInput == null || !int.TryParse(userInput, out habitID))
@@ -308,12 +296,12 @@ void CreateDB()
     try
     {
         using var connection = new SqliteConnection(connectionString);
-        {
-            connection.Open();
 
-            using var command = connection.CreateCommand();
+        connection.Open();
 
-            command.CommandText = @"
+        using var command = connection.CreateCommand();
+
+        command.CommandText = @"
             CREATE TABLE IF NOT EXISTS habits(
             ID INTEGER PRIMARY KEY AUTOINCREMENT,
             HABIT TEXT,
@@ -323,8 +311,7 @@ void CreateDB()
         )
         ";
 
-            command.ExecuteNonQuery();
-        }
+        command.ExecuteNonQuery();
     }
     catch (SqliteException e)
     {
@@ -340,19 +327,17 @@ bool AddHabitToDB(string userHabit, string date, int quantity, string unit)
     try
     {
         using var connection = new SqliteConnection(connectionString);
-        {
-            connection.Open();
+        connection.Open();
 
-            using var command = connection.CreateCommand();
+        using var command = connection.CreateCommand();
 
-            command.CommandText = "INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT) VALUES ($userHabit, $date, $quantity, $unit)";
-            command.Parameters.AddWithValue("$userHabit", userHabit);
-            command.Parameters.AddWithValue("$date", date);
-            command.Parameters.AddWithValue("$quantity", quantity);
-            command.Parameters.AddWithValue("$unit", unit);
+        command.CommandText = "INSERT INTO habits (HABIT, DATE, QUANTITY, UNIT) VALUES ($userHabit, $date, $quantity, $unit)";
+        command.Parameters.AddWithValue("$userHabit", userHabit);
+        command.Parameters.AddWithValue("$date", date);
+        command.Parameters.AddWithValue("$quantity", quantity);
+        command.Parameters.AddWithValue("$unit", unit);
 
-            command.ExecuteNonQuery();
-        }
+        command.ExecuteNonQuery();
 
         success = true;
     }
@@ -371,16 +356,15 @@ int DeleteHabitFromDB(int idToDelete)
     try
     {
         using var connection = new SqliteConnection(connectionString);
-        {
-            connection.Open();
 
-            using var command = connection.CreateCommand();
+        connection.Open();
 
-            command.CommandText = "DELETE FROM habits WHERE ID = $idToDelete";
-            command.Parameters.AddWithValue("$idToDelete", idToDelete);
+        using var command = connection.CreateCommand();
 
-            numberOfRowsDeleted = command.ExecuteNonQuery();
-        }
+        command.CommandText = "DELETE FROM habits WHERE ID = $idToDelete";
+        command.Parameters.AddWithValue("$idToDelete", idToDelete);
+
+        numberOfRowsDeleted = command.ExecuteNonQuery();
     }
     catch (SqliteException e)
     {
@@ -396,20 +380,18 @@ int UpdateHabitFromDB(int idToUpdate, string newUserHabit, string newDate, int n
     try
     {
         using var connection = new SqliteConnection(connectionString);
-        {
-            connection.Open();
+        connection.Open();
 
-            using var command = connection.CreateCommand();
+        using var command = connection.CreateCommand();
 
-            command.CommandText = "UPDATE habits SET HABIT = $newUserHabit, DATE = $newDate, QUANTITY = $newQuantity, UNIT = $newUnit WHERE ID = $idToUpdate";
-            command.Parameters.AddWithValue("$newUserHabit", newUserHabit);
-            command.Parameters.AddWithValue("$newDate", newDate);
-            command.Parameters.AddWithValue("$newQuantity", newQuantity);
-            command.Parameters.AddWithValue("$newUnit", newUnit);
-            command.Parameters.AddWithValue("$idToUpdate", idToUpdate);
+        command.CommandText = "UPDATE habits SET HABIT = $newUserHabit, DATE = $newDate, QUANTITY = $newQuantity, UNIT = $newUnit WHERE ID = $idToUpdate";
+        command.Parameters.AddWithValue("$newUserHabit", newUserHabit);
+        command.Parameters.AddWithValue("$newDate", newDate);
+        command.Parameters.AddWithValue("$newQuantity", newQuantity);
+        command.Parameters.AddWithValue("$newUnit", newUnit);
+        command.Parameters.AddWithValue("$idToUpdate", idToUpdate);
 
-            numberOfRowsUpdated = command.ExecuteNonQuery();
-        }
+        numberOfRowsUpdated = command.ExecuteNonQuery();
     }
     catch (SqliteException e)
     {
@@ -423,35 +405,38 @@ List<(int id, string habitName, string date, int quantity, string unit)> GetHabi
 {
     List<(int id, string habitName, string date, int quantity, string unit)> habitsInfo = new();
 
-        using var connection = new SqliteConnection(connectionString);
-        {
-            connection.Open();
+    using var connection = new SqliteConnection(connectionString);
 
-            using var command = connection.CreateCommand();
+    connection.Open();
 
-            command.CommandText = @"SELECT * FROM habits";
+    using var command = connection.CreateCommand();
 
-            using var reader = command.ExecuteReader();
+    command.CommandText = @"SELECT * FROM habits";
 
-            while (reader.Read())
-            {
-                int id = reader.GetInt32(0);
-                string habit = reader.GetString(1);
-                string date = reader.GetString(2);
-                int quantity = reader.GetInt32(3);
-                string unit = reader.GetString(4);
+    using var reader = command.ExecuteReader();
 
-                habitsInfo.Add((id, habit, date, quantity, unit));
-            }
+    while (reader.Read())
+    {
+        int id = reader.GetInt32(0);
+        string habit = reader.GetString(1);
+        string date = reader.GetString(2);
+        int quantity = reader.GetInt32(3);
+        string unit = reader.GetString(4);
 
-            connection.Close();
-        }
+        habitsInfo.Add((id, habit, date, quantity, unit));
+    }
 
-        return habitsInfo;    
+    return habitsInfo;
 }
 
 void DisplayErrorMessageDB(SqliteException e, string action)
 {
     Console.WriteLine($"\nAn error occurred while trying to {action}. Please try again later.\nError: {e.Message}. (Press Enter to return to main menu)");
+    Console.ReadLine();
+}
+
+void DisplayBasicMessage(string message)
+{
+    Console.WriteLine(message);
     Console.ReadLine();
 }
